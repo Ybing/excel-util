@@ -62,19 +62,23 @@ public class ExcelUtil {
                 continue;
             }
             for (Row row : sheet){
+                int num = row.getLastCellNum();
+                Object[] heads = new Object[num + 1];
                 //跳过首行（表头）
                 if (row.getRowNum() < EXCEL_HEAD_ROW_NUM) {
+                    for (int k = 0; k<num;k++){
+                        heads[k] = row.getCell(k);
+                    }
                     continue;
                 }
                 T entity = entityClass.newInstance();
                 //获得表格某行的值
-                int num = row.getLastCellNum()+1;
-                Object[] objects = new Object[num];
-                for (int k = 0; k < num - 1;k++){
+                Object[] objects = new Object[num+1];
+                for (int k = 0; k < num;k++){
                     objects[k] = row.getCell(k);
                 }
                 //给对象赋值
-                setValue(entity,objects);
+                setValue(entity,objects,heads);
                 //将对象添加至数据列表
                 dataList.add(entity);
             }
@@ -142,15 +146,24 @@ public class ExcelUtil {
     /**
      * 给对象赋值
      * @param entity 实体
-     * @param obj 数据
+     * @param objs 数据
+     * @param heads 表头
      */
-    private static void setValue(Object entity, Object[] obj) throws Exception {
-        Map<Integer, Field> fields = getFiledByName(entity.getClass());
+    private static void setValue(Object entity, Object[] objs,Object[] heads) throws Exception {
+        Map<String, Field> fields = getFiledByName(entity.getClass());
+        for (Object object : heads){
+            String item = object.toString();
+
+        }
+//        Map<String,Integer>
         if (fields == null || fields.size() == 0){
             throw new Exception("实体类不包含任何属性");
         }
-        if (obj == null || obj.length == 0){
+        if (objs == null || objs.length == 0){
             throw new Exception("数据不存在");
+        }
+        if (heads == null || heads.length == 0){
+            throw  new Exception("表头不存在");
         }
         for (Map.Entry<Integer,Field> entry:fields.entrySet()){
             Field field = entry.getValue();
@@ -158,32 +171,32 @@ public class ExcelUtil {
                 field.setAccessible(true);
                 Class<?> fieldType = field.getType();
                 if (String.class == fieldType) {
-                    field.set(entity, String.valueOf(obj[entry.getKey()]));
+                    field.set(entity, String.valueOf(objs[entry.getKey()]));
                 } else if (Integer.TYPE == fieldType || Integer.class == fieldType) {
-                    if (obj[entry.getKey()].toString().contains(".")){
-                        obj[entry.getKey()] = new Double(obj[entry.getKey()].toString()).intValue();
+                    if (objs[entry.getKey()].toString().contains(".")){
+                        objs[entry.getKey()] = new Double(objs[entry.getKey()].toString()).intValue();
                     }
-                    field.set(entity, Integer.parseInt(obj[entry.getKey()].toString()));
+                    field.set(entity, Integer.parseInt(objs[entry.getKey()].toString()));
                 } else if (Long.TYPE == fieldType || Long.class == fieldType) {
-                    field.set(entity, Long.valueOf(obj[entry.getKey()].toString()));
+                    field.set(entity, Long.valueOf(objs[entry.getKey()].toString()));
                 } else if (Float.TYPE == fieldType || Float.class == fieldType) {
-                    field.set(entity, Float.valueOf(obj[entry.getKey()].toString()));
+                    field.set(entity, Float.valueOf(objs[entry.getKey()].toString()));
                 } else if (Short.TYPE == fieldType || Short.class == fieldType) {
-                    field.set(entity, Short.valueOf(obj[entry.getKey()].toString()));
+                    field.set(entity, Short.valueOf(objs[entry.getKey()].toString()));
                 } else if (Double.TYPE == fieldType || Double.class == fieldType) {
-                    field.set(entity, Double.valueOf(obj[entry.getKey()].toString()));
+                    field.set(entity, Double.valueOf(objs[entry.getKey()].toString()));
                 }else if (Date.class == fieldType) {
-                    if (StringUtils.isNotEmpty(obj[entry.getKey()].toString())){
+                    if (StringUtils.isNotEmpty(objs[entry.getKey()].toString())){
                         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        Date date = format.parse(obj[entry.getKey()].toString());
+                        Date date = format.parse(objs[entry.getKey()].toString());
                         field.set(entity, date);
                     }
                 }else if (Character.TYPE == fieldType) {
-                    if ((obj[entry.getKey()] != null) && (obj[entry.getKey()].toString().length() > 0)) {
-                        field.set(entity, Character.valueOf(obj[entry.getKey()].toString().charAt(0)));
+                    if ((objs[entry.getKey()] != null) && (objs[entry.getKey()].toString().length() > 0)) {
+                        field.set(entity, Character.valueOf(objs[entry.getKey()].toString().charAt(0)));
                     }
                 }else {
-                    field.set(entity, obj[entry.getKey()]);
+                    field.set(entity, objs[entry.getKey()]);
                 }
             }else {
                 throw new Exception("存在不允许导入的字段");
@@ -196,15 +209,15 @@ public class ExcelUtil {
      * @param clazz 类
      * @return
      */
-    private static Map<Integer, Field> getFiledByName(Class<?> clazz) throws Exception {
-        Map<Integer,Field>fieldMap = new LinkedHashMap<>(16);
+    private static Map<String, Field> getFiledByName(Class<?> clazz) throws Exception {
+        Map<String,Field>fieldMap = new LinkedHashMap<>(16);
         Field[] fields = clazz.getDeclaredFields();
         if (fields.length == 0){
             throw new Exception("此实体类不含任何属性");
         }
-        for (int i = 0;i<fields.length;i++){
-            if (fields[i].getAnnotation(Excel.class) != null){
-                fieldMap.put(i,fields[i]);
+        for (Field field : fields){
+            if (field.getAnnotation(Excel.class) != null){
+                fieldMap.put(field.getAnnotation(Excel.class).value(),field);
             }
         }
         return fieldMap;
