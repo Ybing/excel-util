@@ -414,11 +414,14 @@ public class ExcelUtil {
     public static <T> void exportExcel(String fileType, String title, Integer sheetSize, List<T> data, Class clazz, OutputStream out)
             throws Exception {
         //校验数据
-        if (StringUtils.isEmpty(fileType) || (!EXCEL_XLS.equals(fileType) && !EXCEL_XLSX.equals(fileType))) {
-            throw new Exception("请确认要导出的文件类型为Excel文件格式");
+        if (!EXCEL_XLS.equals(fileType) && !EXCEL_XLSX.equals(fileType)) {
+            throw new Exception("不支持的文件格式");
         }
         if (out == null) {
             throw new Exception("未确定输出目标流");
+        }
+        if (StringUtils.isEmpty(title)){
+            title = "工作表";
         }
         //设置单页行数
         if (sheetSize == null || sheetSize <= 0) {
@@ -443,7 +446,7 @@ public class ExcelUtil {
             Sheet sheet;
             //设置sheet名
             if (pages > 1) {
-                sheet = workbook.createSheet(title + i);
+                sheet = workbook.createSheet(title + i+1);
             } else {
                 sheet = workbook.createSheet(title);
             }
