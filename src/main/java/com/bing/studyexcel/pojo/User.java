@@ -12,10 +12,11 @@ import java.util.Date;
  */
 @Data
 public class User {
-    @Excel(value = "姓名",order = 1)
+    @Excel(value = "姓名",order = 1,required = true)
     private String userName;
-    @Excel(value = "年龄",order = 2)
+    @Excel(value = "年龄",order = 2,required = false)
     private Integer age;
     @Excel(value = "生日",order = 3)
     private Date birthday;
+    private Double money;
 }

@@ -40,6 +40,8 @@ public class ExcelController {
         user2.setAge(22);
         user1.setBirthday(new Date());
         user2.setBirthday(new Date());
+        user1.setMoney(12345D);
+        user2.setMoney(67890D);
         userList.add(user1);
         userList.add(user2);
 
