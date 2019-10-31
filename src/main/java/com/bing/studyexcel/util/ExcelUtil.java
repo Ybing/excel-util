@@ -446,7 +446,7 @@ public class ExcelUtil {
             Sheet sheet;
             //设置sheet名
             if (pages > 1) {
-                sheet = workbook.createSheet(title + i+1);
+                sheet = workbook.createSheet(title+Integer.valueOf(i+1).toString());
             } else {
                 sheet = workbook.createSheet(title);
             }
@@ -457,7 +457,7 @@ public class ExcelUtil {
                 cell.setCellValue(fieldNameMap.get(j));
             }
             //填充数据
-            for (int j = startData; j < endData; j++) {
+            for (int j = startData; j <= endData; j++) {
                 row = sheet.createRow(rowNum++);
                 T item = data.get(j);
                 for (int k = 0; k < fieldNameMap.size(); k++) {
