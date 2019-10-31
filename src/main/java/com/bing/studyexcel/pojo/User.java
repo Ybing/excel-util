@@ -18,5 +18,6 @@ public class User {
     private Integer age;
     @Excel(value = "生日",order = 3)
     private Date birthday;
+    @Excel(value = "财富",order = 4)
     private Double money;
 }
