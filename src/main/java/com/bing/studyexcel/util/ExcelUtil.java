@@ -68,30 +68,27 @@ public class ExcelUtil {
                 if (row.getRowNum() < EXCEL_HEAD_ROW_NUM) {
                     heads = new Object[num];
                     for (int k = 0; k < num; k++) {
-                        if (row.getCell(k) == null || "".equals(row.getCell(k).toString())){
+                        if (row.getCell(k) == null || "".equals(row.getCell(k).toString())) {
                             heads[k] = "";
-                        }
-                        else
-                        {
+                        } else {
                             heads[k] = row.getCell(k);
                         }
                     }
                     //校验表头
-                    checkExcelHead(heads,entityClass);
+                    checkExcelHead(heads, entityClass);
                     continue;
                 }
                 T entity = entityClass.newInstance();
                 //获得表格某行的值
                 Object[] objects = new Object[num];
                 for (int k = 0; k < num; k++) {
-                    if (row.getCell(k) == null || "".equals(row.getCell(k).toString())){
+                    if (row.getCell(k) == null || "".equals(row.getCell(k).toString())) {
                         objects[k] = "";
-                    }
-                    else{
+                    } else {
                         objects[k] = row.getCell(k);
                     }
                 }
-                if (heads == null){
+                if (heads == null) {
                     throw new IOException("表头为空");
                 }
                 //给对象赋值
@@ -105,21 +102,22 @@ public class ExcelUtil {
 
     /**
      * 校验表头
+     *
      * @param heads 表头字段
      */
-    private static void checkExcelHead(Object[] heads,Class<?>entityClass) throws Exception {
+    private static void checkExcelHead(Object[] heads, Class<?> entityClass) throws Exception {
         //校验表头字段是否存在重复表头
-        if (heads == null || heads.length == 0){
+        if (heads == null || heads.length == 0) {
             throw new Exception("表头为空");
         }
-        Set<String>headSet = new HashSet<>();
+        Set<String> headSet = new HashSet<>();
         int length = heads.length;
-        for (int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             String content = heads[i].toString();
-            for (int j = i+1;j<length; j++){
-                if (!"".equals(content) && heads[i].equals(heads[j])){
+            for (int j = i + 1; j < length; j++) {
+                if (!"".equals(content) && heads[i].equals(heads[j])) {
                     throw new Exception("表头中存在重复字段");
-                }else {
+                } else {
                     headSet.add(content);
                 }
             }
@@ -127,33 +125,34 @@ public class ExcelUtil {
         //获取@Excel注解的required为true的字段对应的value值（即Excel表必须具备的表头字段）
         Set<String> headsRequired = getHeadsRequired(entityClass);
         //校验表头中是否包含所有必须的字段
-        for (String name : headsRequired){
-            if (!headSet.contains(name)){
-                throw new Exception("Excel表头中缺少“"+name+"”字段");
+        for (String name : headsRequired) {
+            if (!headSet.contains(name)) {
+                throw new Exception("Excel表头中缺少“" + name + "”字段");
             }
         }
     }
 
     /**
      * 获取必须字段名
+     *
      * @param clazz 实体类
      * @return 必须字段名集合
      */
     private static Set<String> getHeadsRequired(Class<?> clazz) throws Exception {
-        if (clazz == null){
+        if (clazz == null) {
             throw new Exception("类不能为空");
         }
         Field[] fields = clazz.getDeclaredFields();
-        if (fields.length == 0){
+        if (fields.length == 0) {
             throw new Exception(clazz.getName() + " 类属性为空");
         }
-        Set<String>nameSet = new HashSet<>();
-        for (Field field : fields){
-            if (field.getAnnotation(Excel.class)!= null && field.getAnnotation(Excel.class).required()){
+        Set<String> nameSet = new HashSet<>();
+        for (Field field : fields) {
+            if (field.getAnnotation(Excel.class) != null && field.getAnnotation(Excel.class).required()) {
                 String value = field.getAnnotation(Excel.class).value();
-                if (StringUtils.isEmpty(value)){
-                    throw new Exception(clazz.getName() + " 类的"+field.getName()+"字段的@Excel注解的value值为空或空串");
-                }else {
+                if (StringUtils.isEmpty(value)) {
+                    throw new Exception(clazz.getName() + " 类的" + field.getName() + "字段的@Excel注解的value值为空或空串");
+                } else {
                     nameSet.add(value);
                 }
             }
@@ -239,9 +238,9 @@ public class ExcelUtil {
             throw new Exception("实体类不包含任何属性");
         }
         //创建属性与value值的映射
-        Map<Field,String>fieldName = new LinkedHashMap<>(16);
-        for (Map.Entry<String,Field> entry:fields.entrySet()){
-            fieldName.put(entry.getValue(),entry.getKey());
+        Map<Field, String> fieldName = new LinkedHashMap<>(16);
+        for (Map.Entry<String, Field> entry : fields.entrySet()) {
+            fieldName.put(entry.getValue(), entry.getKey());
         }
 
         //获取Excel表头与列编号的映射
@@ -254,9 +253,9 @@ public class ExcelUtil {
         Map<Integer, Field> fieldMap = new LinkedHashMap<>(16);
         for (Map.Entry<String, Field> entry : fields.entrySet()) {
             String headName = entry.getKey();
-            if (headRowNumMap.get(headName) == null){
+            if (headRowNumMap.get(headName) == null) {
                 //判断此字段是否为必须字段
-                if (!checkRequired(entity.getClass(),entry.getValue())){
+                if (!checkRequired(entity.getClass(), entry.getValue())) {
                     continue;
                 }
             }
@@ -271,30 +270,29 @@ public class ExcelUtil {
                 Object obj;
                 //明确要获取哪一列的数据
                 Integer cellNum = entry.getKey();
-                if (objs.length <= cellNum){
+                if (objs.length <= cellNum) {
                     //检验该字段是否为必须字段
-                    Boolean required = checkRequired(entity.getClass(),field);
-                    //是必须字段却没数据
-                    if (required){
-                        throw new Exception("“"+fieldName.get(field) + "”字段的数据为必须数据，不能为空");
-                    }
-                    //不是必须字段也没数据
-                    else {
-                        continue;
-                    }
-                }else if (StringUtils.isEmpty(objs[entry.getKey()].toString())){
-                    //检验该字段是否为必须字段
-                    Boolean required = checkRequired(entity.getClass(),field);
+                    Boolean required = checkRequired(entity.getClass(), field);
                     //是必须字段却没数据
                     if (required) {
-                        throw new Exception("“"+fieldName.get(field) + "”字段的数据为必须数据，不能为空");
+                        throw new Exception("“" + fieldName.get(field) + "”字段的数据为必须数据，不能为空");
                     }
                     //不是必须字段也没数据
                     else {
                         continue;
                     }
-                }
-                else {
+                } else if (StringUtils.isEmpty(objs[entry.getKey()].toString())) {
+                    //检验该字段是否为必须字段
+                    Boolean required = checkRequired(entity.getClass(), field);
+                    //是必须字段却没数据
+                    if (required) {
+                        throw new Exception("“" + fieldName.get(field) + "”字段的数据为必须数据，不能为空");
+                    }
+                    //不是必须字段也没数据
+                    else {
+                        continue;
+                    }
+                } else {
                     obj = objs[entry.getKey()];
                 }
                 if (String.class == fieldType) {
@@ -333,14 +331,15 @@ public class ExcelUtil {
 
     /**
      * 检查字段
+     *
      * @param clazz 实体类
      * @param field 字段
      * @return true:是必须字段 false:非必须字段
      */
-    private static Boolean checkRequired(Class<?> clazz,Field field) {
+    private static Boolean checkRequired(Class<?> clazz, Field field) {
         Field[] fields = clazz.getDeclaredFields();
-        for (Field fie : fields){
-            if (fie.getAnnotation(Excel.class) != null && fie.getAnnotation(Excel.class).required() && fie.equals(field)){
+        for (Field fie : fields) {
+            if (fie.getAnnotation(Excel.class) != null && fie.getAnnotation(Excel.class).required() && fie.equals(field)) {
                 return true;
             }
         }
@@ -382,19 +381,19 @@ public class ExcelUtil {
         for (int i = 0; i < fields.length; i++) {
             if (fields[i].getAnnotation(Excel.class) != null) {
                 String name = fields[i].getAnnotation(Excel.class).value();
-                if (StringUtils.isEmpty(name)){
-                    throw new Exception(clazz.getName() + " 类中，字段"+fields[i].getName()+"的@Excel注解的value值不能为空或空串");
-                }else {
+                if (StringUtils.isEmpty(name)) {
+                    throw new Exception(clazz.getName() + " 类中，字段" + fields[i].getName() + "的@Excel注解的value值不能为空或空串");
+                } else {
                     fieldNameMap.put(i, name);
                 }
             }
         }
         //检查有无重复的注解字段名（即@Excel注解的value值）
         Set<String> name = new HashSet<>();
-        for (Map.Entry<Integer,String> entry:fieldNameMap.entrySet()){
+        for (Map.Entry<Integer, String> entry : fieldNameMap.entrySet()) {
             name.add(entry.getValue());
         }
-        if (name.size() != fieldNameMap.size()){
+        if (name.size() != fieldNameMap.size()) {
             throw new Exception(clazz.getName() + " 类中@Excel注解的value值存在重复现象");
         }
         return fieldNameMap;
@@ -420,7 +419,7 @@ public class ExcelUtil {
         if (out == null) {
             throw new Exception("未确定输出目标流");
         }
-        if (StringUtils.isEmpty(title)){
+        if (StringUtils.isEmpty(title)) {
             title = "工作表";
         }
         //设置单页行数
@@ -435,18 +434,18 @@ public class ExcelUtil {
         Workbook workbook = getWorkbook(fileType);
         Map<Integer, String> fieldNameMap = getFiledNameByClassName(clazz);
         Map<String, Field> fieldMap = getFiledByName(clazz);
-        Map<Integer,Field> tempMap = new LinkedHashMap<>(16);
-        for (Map.Entry<Integer,String> entry:fieldNameMap.entrySet()){
-            tempMap.put(entry.getKey(),fieldMap.get(fieldNameMap.get(entry.getKey())));
+        Map<Integer, Field> tempMap = new LinkedHashMap<>(16);
+        for (Map.Entry<Integer, String> entry : fieldNameMap.entrySet()) {
+            tempMap.put(entry.getKey(), fieldMap.get(fieldNameMap.get(entry.getKey())));
         }
         for (int i = 0; i < pages; i++) {
             int startData = i * sheetSize;
-            int endData = (i + 1) * sheetSize - 1 > data.size() ? data.size() : (i + 1) * sheetSize - 1;
+            int endData = (i + 1) * sheetSize - 1 > data.size() ? data.size() - 1 : (i + 1) * sheetSize - 1;
             int rowNum = 0;
             Sheet sheet;
             //设置sheet名
             if (pages > 1) {
-                sheet = workbook.createSheet(title+Integer.valueOf(i+1).toString());
+                sheet = workbook.createSheet(title + Integer.valueOf(i + 1).toString());
             } else {
                 sheet = workbook.createSheet(title);
             }
